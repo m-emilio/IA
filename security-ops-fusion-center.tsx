@@ -107,6 +107,85 @@ const SecurityOpsFusionCenter: React.FC = () => {
   const [activeTab, setActiveTab] = useState<string>('dashboard');
   const [selectedThreat, setSelectedThreat] = useState<ThreatIndicator | null>(null);
   const [searchTerm, setSearchTerm] = useState<string>('');
+  const [assets, setAssets] = useState<Asset[]>([
+    {
+      id: 'asset-1',
+      hostname: 'firewall-01.corp',
+      ip: '10.0.0.1',
+      status: 'online',
+      lastSeen: '2025-05-30 15:32',
+      vulnerability: 0,
+      osType: 'Palo Alto Networks',
+    },
+    {
+      id: 'asset-2',
+      hostname: 'siem-master.corp',
+      ip: '10.0.1.50',
+      status: 'online',
+      lastSeen: '2025-05-30 15:35',
+      vulnerability: 2,
+      osType: 'Linux (Ubuntu 22.04)',
+    },
+    {
+      id: 'asset-3',
+      hostname: 'ad-dc-01.corp',
+      ip: '10.0.1.10',
+      status: 'compromised',
+      lastSeen: '2025-05-30 14:22',
+      vulnerability: 7,
+      osType: 'Windows Server 2019',
+    },
+    {
+      id: 'asset-4',
+      hostname: 'backup-srv-02.corp',
+      ip: '10.0.2.20',
+      status: 'offline',
+      lastSeen: '2025-05-28 09:12',
+      vulnerability: 3,
+      osType: 'Windows Server 2022',
+    },
+  ]);
+  const [newAssetHostname, setNewAssetHostname] = useState('');
+  const [newAssetIP, setNewAssetIP] = useState('');
+  const [newAssetOS, setNewAssetOS] = useState('');
+  const [editingAssetId, setEditingAssetId] = useState<string | null>(null);
+  const [pkiCerts, setPkiCerts] = useState<PKICert[]>([
+    {
+      id: 'pki-1',
+      subject: 'api.company.internal',
+      issuer: 'Internal CA',
+      expires: '2025-08-15',
+      status: 'valid',
+      algorithm: 'RSA-4096',
+      keySize: 4096,
+      usage: ['TLS Web Server Auth', 'Digital Signature'],
+    },
+    {
+      id: 'pki-2',
+      subject: 'mail.company.internal',
+      issuer: 'Internal CA',
+      expires: '2025-07-02',
+      status: 'expiring',
+      algorithm: 'RSA-2048',
+      keySize: 2048,
+      usage: ['S/MIME', 'TLS Web Server Auth'],
+    },
+    {
+      id: 'pki-3',
+      subject: 'vpn.company.internal',
+      issuer: 'Internal CA',
+      expires: '2024-12-10',
+      status: 'expired',
+      algorithm: 'RSA-2048',
+      keySize: 2048,
+      usage: ['VPN Authentication'],
+    },
+  ]);
+  const [newCertSubject, setNewCertSubject] = useState('');
+  const [newCertIssuer, setNewCertIssuer] = useState('Internal CA');
+  const [newCertExpires, setNewCertExpires] = useState('');
+  const [newCertAlgorithm, setNewCertAlgorithm] = useState('RSA-2048');
+  const [newCertKeySize, setNewCertKeySize] = useState('2048');
   const [inventoryItems, setInventoryItems] = useState<InventoryItem[]>([
     {
       id: 'inv-1',
@@ -209,39 +288,7 @@ const SecurityOpsFusionCenter: React.FC = () => {
     },
   ];
 
-  // Mock Data - PKI
-  const pkiCerts: PKICert[] = [
-    {
-      id: 'pki-1',
-      subject: 'api.company.internal',
-      issuer: 'Internal CA',
-      expires: '2025-08-15',
-      status: 'valid',
-      algorithm: 'RSA-4096',
-      keySize: 4096,
-      usage: ['TLS Web Server Auth', 'Digital Signature'],
-    },
-    {
-      id: 'pki-2',
-      subject: 'mail.company.internal',
-      issuer: 'Internal CA',
-      expires: '2025-07-02',
-      status: 'expiring',
-      algorithm: 'RSA-2048',
-      keySize: 2048,
-      usage: ['S/MIME', 'TLS Web Server Auth'],
-    },
-    {
-      id: 'pki-3',
-      subject: 'vpn.company.internal',
-      issuer: 'Internal CA',
-      expires: '2024-12-10',
-      status: 'expired',
-      algorithm: 'RSA-2048',
-      keySize: 2048,
-      usage: ['VPN Authentication'],
-    },
-  ];
+
 
   // Mock Data - IDS Alerts
   const idsAlerts: IDSAlert[] = [
@@ -354,45 +401,7 @@ const SecurityOpsFusionCenter: React.FC = () => {
     },
   ];
 
-  // Mock Data - Assets
-  const assets: Asset[] = [
-    {
-      id: 'asset-1',
-      hostname: 'firewall-01.corp',
-      ip: '10.0.0.1',
-      status: 'online',
-      lastSeen: '2025-05-30 15:32',
-      vulnerability: 0,
-      osType: 'Palo Alto Networks',
-    },
-    {
-      id: 'asset-2',
-      hostname: 'siem-master.corp',
-      ip: '10.0.1.50',
-      status: 'online',
-      lastSeen: '2025-05-30 15:35',
-      vulnerability: 2,
-      osType: 'Linux (Ubuntu 22.04)',
-    },
-    {
-      id: 'asset-3',
-      hostname: 'ad-dc-01.corp',
-      ip: '10.0.1.10',
-      status: 'compromised',
-      lastSeen: '2025-05-30 14:22',
-      vulnerability: 7,
-      osType: 'Windows Server 2019',
-    },
-    {
-      id: 'asset-4',
-      hostname: 'backup-srv-02.corp',
-      ip: '10.0.2.20',
-      status: 'offline',
-      lastSeen: '2025-05-28 09:12',
-      vulnerability: 3,
-      osType: 'Windows Server 2022',
-    },
-  ];
+
 
   const getStatusIcon = (status: string) => {
     if (status === 'online') return <CheckCircle className="w-4 h-4 text-emerald-400" />;
@@ -560,72 +569,240 @@ const SecurityOpsFusionCenter: React.FC = () => {
   );
 
   // Render PKI Dashboard
-  const PKIDashboard = () => (
-    <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        <div className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
-          <p className="text-slate-500">Valid</p>
-          <p className="text-lg font-bold text-emerald-300">
-            {pkiCerts.filter((c) => c.status === 'valid').length}
-          </p>
-        </div>
-        <div className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
-          <p className="text-slate-500">Expiring</p>
-          <p className="text-lg font-bold text-amber-300">
-            {pkiCerts.filter((c) => c.status === 'expiring').length}
-          </p>
-        </div>
-        <div className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
-          <p className="text-slate-500">Expired</p>
-          <p className="text-lg font-bold text-red-300">
-            {pkiCerts.filter((c) => c.status === 'expired').length}
-          </p>
-        </div>
-      </div>
+  const PKIDashboard = () => {
+    const addCertificate = () => {
+      if (newCertSubject.trim() && newCertExpires.trim()) {
+        const newCert: PKICert = {
+          id: `pki-${Date.now()}`,
+          subject: newCertSubject,
+          issuer: newCertIssuer,
+          expires: newCertExpires,
+          status: 'valid',
+          algorithm: newCertAlgorithm,
+          keySize: parseInt(newCertKeySize),
+          usage: ['General Purpose'],
+        };
+        setPkiCerts([...pkiCerts, newCert]);
+        setNewCertSubject('');
+        setNewCertExpires('');
+      }
+    };
 
-      <div className="space-y-2">
-        {pkiCerts.map((cert) => (
-          <div
-            key={cert.id}
-            className={`bg-slate-900/50 border rounded-lg p-3 text-xs ${
-              cert.status === 'expired'
-                ? 'border-red-700/50'
-                : cert.status === 'expiring'
-                  ? 'border-amber-700/50'
-                  : 'border-emerald-700/50'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div>
-                <div className="font-mono text-sm text-slate-200">{cert.subject}</div>
-                <div className="text-slate-500 mt-1">Issuer: {cert.issuer}</div>
-              </div>
-              <span
-                className={`px-2 py-1 rounded text-xs font-bold ${
-                  cert.status === 'valid'
-                    ? 'bg-emerald-900/50 text-emerald-300'
-                    : cert.status === 'expiring'
-                      ? 'bg-amber-900/50 text-amber-300'
-                      : 'bg-red-900/50 text-red-300'
-                }`}
+    const removeCertificate = (id: string) => {
+      setPkiCerts(pkiCerts.filter((cert) => cert.id !== id));
+    };
+
+    const updateCertStatus = (id: string, newStatus: 'valid' | 'expiring' | 'expired' | 'revoked') => {
+      setPkiCerts(
+        pkiCerts.map((cert) =>
+          cert.id === id ? { ...cert, status: newStatus } : cert
+        )
+      );
+    };
+
+    const updateExpireDate = (id: string, newDate: string) => {
+      setPkiCerts(
+        pkiCerts.map((cert) =>
+          cert.id === id ? { ...cert, expires: newDate } : cert
+        )
+      );
+    };
+
+    return (
+      <div className="space-y-3">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          <div className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
+            <p className="text-slate-500">Valid</p>
+            <p className="text-lg font-bold text-emerald-300">
+              {pkiCerts.filter((c) => c.status === 'valid').length}
+            </p>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
+            <p className="text-slate-500">Expiring</p>
+            <p className="text-lg font-bold text-amber-300">
+              {pkiCerts.filter((c) => c.status === 'expiring').length}
+            </p>
+          </div>
+          <div className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
+            <p className="text-slate-500">Expired</p>
+            <p className="text-lg font-bold text-red-300">
+              {pkiCerts.filter((c) => c.status === 'expired').length}
+            </p>
+          </div>
+        </div>
+
+        {/* Add New Certificate */}
+        <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3 space-y-2">
+          <label className="text-xs text-slate-400 block">Add New Certificate</label>
+          <div className="space-y-2">
+            <input
+              type="text"
+              placeholder="Subject (e.g., api.company.internal)"
+              value={newCertSubject}
+              onChange={(e) => setNewCertSubject(e.target.value)}
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-amber-700/50"
+            />
+            <input
+              type="text"
+              placeholder="Issuer (e.g., Internal CA)"
+              value={newCertIssuer}
+              onChange={(e) => setNewCertIssuer(e.target.value)}
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-amber-700/50"
+            />
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                type="date"
+                placeholder="Expiration Date"
+                value={newCertExpires}
+                onChange={(e) => setNewCertExpires(e.target.value)}
+                className="bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-amber-700/50"
+              />
+              <select
+                value={newCertAlgorithm}
+                onChange={(e) => setNewCertAlgorithm(e.target.value)}
+                className="bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-amber-700/50"
               >
-                {cert.status}
-              </span>
+                <option>RSA-2048</option>
+                <option>RSA-4096</option>
+                <option>ECDSA-256</option>
+                <option>ECDSA-384</option>
+              </select>
             </div>
-
-            <div className="grid grid-cols-2 gap-2 text-slate-500">
-              <div>
-                Algorithm: <span className="text-slate-300">{cert.algorithm}</span>
-              </div>
-              <div>
-                Expires: <span className="text-slate-300 text-xs">{cert.expires}</span>
-              </div>
+            <div className="grid grid-cols-2 gap-2">
+              <select
+                value={newCertKeySize}
+                onChange={(e) => setNewCertKeySize(e.target.value)}
+                className="bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-amber-700/50"
+              >
+                <option value="2048">2048-bit</option>
+                <option value="4096">4096-bit</option>
+                <option value="8192">8192-bit</option>
+              </select>
+              <button
+                onClick={addCertificate}
+                className="bg-amber-900/50 hover:bg-amber-900/70 border border-amber-700/50 text-amber-300 px-3 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 transition"
+              >
+                <Plus className="w-3 h-3" />
+                Add
+              </button>
             </div>
           </div>
-        ))}
+        </div>
+
+        {/* Search/Filter */}
+        <div className="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search certificates..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-slate-900/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 flex-1 outline-none focus:border-amber-700/50"
+            />
+          </div>
+        </div>
+
+        {/* Certificates List */}
+        <div className="space-y-2">
+          {pkiCerts
+            .filter(
+              (cert) =>
+                cert.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                cert.issuer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                cert.algorithm.toLowerCase().includes(searchTerm.toLowerCase())
+            )
+            .map((cert) => (
+              <div
+                key={cert.id}
+                className={`bg-slate-900/50 border rounded-lg p-3 text-xs ${
+                  cert.status === 'expired'
+                    ? 'border-red-700/50'
+                    : cert.status === 'expiring'
+                      ? 'border-amber-700/50'
+                      : 'border-emerald-700/50'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="font-mono text-sm text-slate-200">{cert.subject}</div>
+                    <div className="text-slate-500 mt-1 text-xs">Issuer: {cert.issuer}</div>
+                  </div>
+                  <button
+                    onClick={() => removeCertificate(cert.id)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/30 p-1 rounded transition"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <div className="space-y-3 pt-3 border-t border-slate-700/30">
+                  {/* Certificate Details */}
+                  <div className="grid grid-cols-2 gap-2 text-slate-500">
+                    <div>
+                      Algorithm: <span className="text-slate-300 font-mono text-xs">{cert.algorithm}</span>
+                    </div>
+                    <div>
+                      Key Size: <span className="text-slate-300">{cert.keySize}-bit</span>
+                    </div>
+                  </div>
+
+                  {/* Status Controls */}
+                  <div>
+                    <p className="text-slate-500 mb-1">Status</p>
+                    <div className="grid grid-cols-2 gap-1">
+                      {['valid', 'expiring', 'expired', 'revoked'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => updateCertStatus(cert.id, status as any)}
+                          className={`px-2 py-1 rounded text-xs font-bold transition ${
+                            cert.status === status
+                              ? status === 'valid'
+                                ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50'
+                                : status === 'expiring'
+                                  ? 'bg-amber-900/50 text-amber-300 border border-amber-700/50'
+                                  : status === 'expired'
+                                    ? 'bg-red-900/50 text-red-300 border border-red-700/50'
+                                    : 'bg-purple-900/50 text-purple-300 border border-purple-700/50'
+                              : 'bg-slate-800/30 text-slate-400 border border-slate-700/30 hover:bg-slate-700/30'
+                          }`}
+                        >
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Expiration Date Editor */}
+                  <div>
+                    <p className="text-slate-500 mb-1">Expires</p>
+                    <input
+                      type="date"
+                      value={cert.expires}
+                      onChange={(e) => updateExpireDate(cert.id, e.target.value)}
+                      className="w-full bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 outline-none focus:border-amber-700/50"
+                    />
+                  </div>
+
+                  {/* Usage Tags */}
+                  <div>
+                    <p className="text-slate-500 mb-1">Usage</p>
+                    <div className="flex flex-wrap gap-1">
+                      {cert.usage.map((use, idx) => (
+                        <span key={idx} className="px-2 py-0.5 bg-slate-800/50 border border-slate-700/50 rounded text-xs text-slate-300">
+                          {use}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render IDS Dashboard
   const IDSDashboard = () => (
@@ -814,75 +991,244 @@ const SecurityOpsFusionCenter: React.FC = () => {
   );
 
   // Render Asset Tracking
-  const AssetTracking = () => (
-    <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-2 text-xs">
-        {[
-          { status: 'online', count: assets.filter((a) => a.status === 'online').length, icon: CheckCircle, color: 'text-emerald-300' },
-          { status: 'offline', count: assets.filter((a) => a.status === 'offline').length, icon: AlertCircle, color: 'text-slate-400' },
-          {
-            status: 'compromised',
-            count: assets.filter((a) => a.status === 'compromised').length,
-            icon: AlertTriangle,
-            color: 'text-red-300',
-          },
-        ].map((stat) => (
-          <div key={stat.status} className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
-            <p className="text-slate-500 capitalize text-xs mb-1">{stat.status}</p>
-            <p className={`text-lg font-bold ${stat.color}`}>{stat.count}</p>
-          </div>
-        ))}
-      </div>
+  const AssetTracking = () => {
+    const filteredAssets = assets.filter(
+      (asset) =>
+        asset.hostname.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.ip.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        asset.osType.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
-      <div className="space-y-2">
-        {assets.map((asset) => (
-          <div
-            key={asset.id}
-            className={`bg-slate-900/50 border rounded-lg p-3 text-xs ${
-              asset.status === 'compromised'
-                ? 'border-red-700/50'
-                : asset.status === 'offline'
-                  ? 'border-slate-700/30'
-                  : 'border-emerald-700/50'
-            }`}
-          >
-            <div className="flex items-start justify-between mb-2">
-              <div className="flex-1">
-                <div className="font-mono text-sm text-slate-200 flex items-center gap-2">
-                  {getStatusIcon(asset.status)}
-                  {asset.hostname}
+    const addAsset = () => {
+      if (newAssetHostname.trim() && newAssetIP.trim() && newAssetOS.trim()) {
+        const newAsset: Asset = {
+          id: `asset-${Date.now()}`,
+          hostname: newAssetHostname,
+          ip: newAssetIP,
+          status: 'online',
+          lastSeen: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString(),
+          vulnerability: 0,
+          osType: newAssetOS,
+        };
+        setAssets([...assets, newAsset]);
+        setNewAssetHostname('');
+        setNewAssetIP('');
+        setNewAssetOS('');
+      }
+    };
+
+    const removeAsset = (id: string) => {
+      setAssets(assets.filter((asset) => asset.id !== id));
+    };
+
+    const updateAssetStatus = (id: string, newStatus: 'online' | 'offline' | 'compromised') => {
+      setAssets(
+        assets.map((asset) =>
+          asset.id === id
+            ? { ...asset, status: newStatus, lastSeen: new Date().toISOString().split('T')[0] + ' ' + new Date().toLocaleTimeString() }
+            : asset
+        )
+      );
+    };
+
+    const updateVulnerability = (id: string, change: number) => {
+      setAssets(
+        assets.map((asset) =>
+          asset.id === id ? { ...asset, vulnerability: Math.max(0, asset.vulnerability + change) } : asset
+        )
+      );
+    };
+
+    return (
+      <div className="space-y-3">
+        {/* Summary Stats */}
+        <div className="grid grid-cols-3 gap-2 text-xs">
+          {[
+            { status: 'online', count: assets.filter((a) => a.status === 'online').length, icon: CheckCircle, color: 'text-emerald-300' },
+            { status: 'offline', count: assets.filter((a) => a.status === 'offline').length, icon: AlertCircle, color: 'text-slate-400' },
+            {
+              status: 'compromised',
+              count: assets.filter((a) => a.status === 'compromised').length,
+              icon: AlertTriangle,
+              color: 'text-red-300',
+            },
+          ].map((stat) => (
+            <div key={stat.status} className="bg-slate-800/50 border border-slate-700/30 rounded p-2">
+              <p className="text-slate-500 capitalize text-xs mb-1">{stat.status}</p>
+              <p className={`text-lg font-bold ${stat.color}`}>{stat.count}</p>
+            </div>
+          ))}
+        </div>
+
+        {/* Add New Asset */}
+        <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-3 space-y-2">
+          <label className="text-xs text-slate-400 block">Add New Asset</label>
+          <div className="space-y-2">
+            <input
+              type="text"
+              placeholder="Hostname (e.g., server-01.corp)"
+              value={newAssetHostname}
+              onChange={(e) => setNewAssetHostname(e.target.value)}
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-amber-700/50"
+            />
+            <input
+              type="text"
+              placeholder="IP Address (e.g., 10.0.1.50)"
+              value={newAssetIP}
+              onChange={(e) => setNewAssetIP(e.target.value)}
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-amber-700/50"
+            />
+            <input
+              type="text"
+              placeholder="OS Type (e.g., Linux, Windows Server 2022)"
+              value={newAssetOS}
+              onChange={(e) => setNewAssetOS(e.target.value)}
+              className="w-full bg-slate-800/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 outline-none focus:border-amber-700/50"
+            />
+            <button
+              onClick={addAsset}
+              className="w-full bg-amber-900/50 hover:bg-amber-900/70 border border-amber-700/50 text-amber-300 px-3 py-1 rounded text-xs font-bold flex items-center justify-center gap-1 transition"
+            >
+              <Plus className="w-3 h-3" />
+              Add Asset
+            </button>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="bg-slate-800/50 border border-slate-700/30 rounded-lg p-3">
+          <div className="flex items-center gap-2">
+            <Search className="w-4 h-4 text-slate-400" />
+            <input
+              type="text"
+              placeholder="Search assets..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="bg-slate-900/50 border border-slate-700/50 rounded px-2 py-1 text-xs text-slate-200 placeholder-slate-500 flex-1 outline-none focus:border-amber-700/50"
+            />
+          </div>
+        </div>
+
+        {/* Assets List */}
+        <div className="space-y-2">
+          {filteredAssets.length > 0 ? (
+            filteredAssets.map((asset) => (
+              <div
+                key={asset.id}
+                className={`bg-slate-900/50 border rounded-lg p-3 text-xs ${
+                  asset.status === 'compromised'
+                    ? 'border-red-700/50'
+                    : asset.status === 'offline'
+                      ? 'border-slate-700/30'
+                      : 'border-emerald-700/50'
+                }`}
+              >
+                <div className="flex items-start justify-between mb-2">
+                  <div className="flex-1">
+                    <div className="font-mono text-sm text-slate-200 flex items-center gap-2">
+                      {getStatusIcon(asset.status)}
+                      {asset.hostname}
+                    </div>
+                    <div className="text-slate-500 mt-1 font-mono text-xs">{asset.ip}</div>
+                  </div>
+                  <button
+                    onClick={() => removeAsset(asset.id)}
+                    className="text-red-400 hover:text-red-300 hover:bg-red-900/30 p-1 rounded transition"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="text-slate-500 mt-1 font-mono text-xs">{asset.ip}</div>
-              </div>
-              <div className="text-right">
-                <p className="text-slate-400">Vulns</p>
-                <p
-                  className={`font-bold text-lg ${
-                    asset.vulnerability > 5
-                      ? 'text-red-300'
-                      : asset.vulnerability > 2
-                        ? 'text-amber-300'
-                        : 'text-emerald-300'
-                  }`}
-                >
-                  {asset.vulnerability}
-                </p>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-2 gap-2 text-slate-500">
-              <div>
-                OS: <span className="text-slate-300">{asset.osType}</span>
+                <div className="space-y-3 pt-3 border-t border-slate-700/30">
+                  {/* OS Type */}
+                  <div className="grid grid-cols-1 gap-2 text-slate-500">
+                    <div>
+                      OS: <span className="text-slate-300">{asset.osType}</span>
+                    </div>
+                    <div>
+                      Last Seen: <span className="text-slate-300 text-xs">{asset.lastSeen}</span>
+                    </div>
+                  </div>
+
+                  {/* Status Controls */}
+                  <div>
+                    <p className="text-slate-500 mb-1">Status</p>
+                    <div className="flex gap-1">
+                      {['online', 'offline', 'compromised'].map((status) => (
+                        <button
+                          key={status}
+                          onClick={() => updateAssetStatus(asset.id, status as any)}
+                          className={`flex-1 px-2 py-1 rounded text-xs font-bold transition ${
+                            asset.status === status
+                              ? status === 'online'
+                                ? 'bg-emerald-900/50 text-emerald-300 border border-emerald-700/50'
+                                : status === 'offline'
+                                  ? 'bg-slate-700/50 text-slate-200 border border-slate-600/50'
+                                  : 'bg-red-900/50 text-red-300 border border-red-700/50'
+                              : 'bg-slate-800/30 text-slate-400 border border-slate-700/30 hover:bg-slate-700/30'
+                          }`}
+                        >
+                          {status.charAt(0).toUpperCase() + status.slice(1)}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Vulnerability Management */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="text-slate-500">Vulnerabilities</p>
+                      <span
+                        className={`text-sm font-bold ${
+                          asset.vulnerability > 5
+                            ? 'text-red-300'
+                            : asset.vulnerability > 2
+                              ? 'text-amber-300'
+                              : 'text-emerald-300'
+                        }`}
+                      >
+                        {asset.vulnerability}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1 bg-slate-800/50 rounded p-1">
+                      <button
+                        onClick={() => updateVulnerability(asset.id, -1)}
+                        className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 p-0.5 rounded transition"
+                      >
+                        <Minus className="w-3 h-3" />
+                      </button>
+                      <div className="flex-1 bg-slate-900/50 rounded h-2">
+                        <div
+                          className={`h-full rounded transition-all ${
+                            asset.vulnerability > 5
+                              ? 'bg-red-500'
+                              : asset.vulnerability > 2
+                                ? 'bg-amber-500'
+                                : 'bg-emerald-500'
+                          }`}
+                          style={{ width: `${(asset.vulnerability / 10) * 100}%` }}
+                        />
+                      </div>
+                      <button
+                        onClick={() => updateVulnerability(asset.id, 1)}
+                        className="text-slate-400 hover:text-slate-200 hover:bg-slate-700/50 p-0.5 rounded transition"
+                      >
+                        <Plus className="w-3 h-3" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
               </div>
-              <div>
-                Last Seen: <span className="text-slate-300 text-xs">{asset.lastSeen}</span>
-              </div>
+            ))
+          ) : (
+            <div className="bg-slate-900/50 border border-slate-700/30 rounded-lg p-4 text-center text-slate-500">
+              {searchTerm ? 'No assets found matching your search.' : 'No assets configured yet.'}
             </div>
-          </div>
-        ))}
+          )}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Render Inventory Management
   const InventoryMgmt = () => (
